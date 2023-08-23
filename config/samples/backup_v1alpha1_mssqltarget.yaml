@@ -9,4 +9,8 @@ metadata:
     app.kubernetes.io/created-by: klusoga-backup-operator
   name: mssqltarget-sample
 spec:
-  # TODO(user): Add fields here
+  appLabel: app=mssql-linux
+  credentialsRef: mssql-creds
+  destinationRef: s3
+  databases:
+    - project-redstone

@@ -29,7 +29,10 @@ type MssqlTargetSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of MssqlTarget. Edit mssqltarget_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	AppLabel       string   `json:"appLabel,omitempty"`
+	CredentialsRef string   `json:"credentialsRef,omitempty"`
+	DestinationRef string   `json:"destinationRef,omitempty"`
+	Databases      []string `json:"databases,omitempty"`
 }
 
 // MssqlTargetStatus defines the observed state of MssqlTarget
@@ -40,6 +43,10 @@ type MssqlTargetStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="AppLabel",type=string,JSONPath=`.spec.appLabel`
+//+kubebuilder:printcolumn:name="Credentials",type=string,JSONPath=`.spec.credentialsRef`
+//+kubebuilder:printcolumn:name="Destination",type=string,JSONPath=`.spec.destinationRef`
+//+kubebuilder:printcolumn:name="Databases",type=string,JSONPath=`.spec.databases`
 
 // MssqlTarget is the Schema for the mssqltargets API
 type MssqlTarget struct {

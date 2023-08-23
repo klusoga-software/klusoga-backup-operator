@@ -15,7 +15,20 @@ spec:
     singular: mssqltarget
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.appLabel
+      name: AppLabel
+      type: string
+    - jsonPath: .spec.credentialsRef
+      name: Credentials
+      type: string
+    - jsonPath: .spec.destinationRef
+      name: Destination
+      type: string
+    - jsonPath: .spec.databases
+      name: Databases
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: MssqlTarget is the Schema for the mssqltargets API
@@ -35,9 +48,17 @@ spec:
           spec:
             description: MssqlTargetSpec defines the desired state of MssqlTarget
             properties:
-              foo:
+              appLabel:
                 description: Foo is an example field of MssqlTarget. Edit mssqltarget_types.go
                   to remove/update
+                type: string
+              credentialsRef:
+                type: string
+              databases:
+                items:
+                  type: string
+                type: array
+              destinationRef:
                 type: string
             type: object
           status:
