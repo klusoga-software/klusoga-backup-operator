@@ -20,4 +20,13 @@ resources:
   kind: Destination
   path: github.com/klusoga-software/klusoga-backup-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: klusoga.de
+  group: backup
+  kind: MssqlTarget
+  path: github.com/klusoga-software/klusoga-backup-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

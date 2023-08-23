@@ -1,0 +1,12 @@
+apiVersion: backup.klusoga.de/v1alpha1
+kind: MssqlTarget
+metadata:
+  labels:
+    app.kubernetes.io/name: mssqltarget
+    app.kubernetes.io/instance: mssqltarget-sample
+    app.kubernetes.io/part-of: klusoga-backup-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: klusoga-backup-operator
+  name: mssqltarget-sample
+spec:
+  # TODO(user): Add fields here

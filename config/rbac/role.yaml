@@ -31,3 +31,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - backup.klusoga.de
+  resources:
+  - mssqltargets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.klusoga.de
+  resources:
+  - mssqltargets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - backup.klusoga.de
+  resources:
+  - mssqltargets/status
+  verbs:
+  - get
+  - patch
+  - update
