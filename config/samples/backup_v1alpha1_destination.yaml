@@ -1,0 +1,12 @@
+apiVersion: backup.klusoga.de/v1alpha1
+kind: Destination
+metadata:
+  labels:
+    app.kubernetes.io/name: destination
+    app.kubernetes.io/instance: destination-sample
+    app.kubernetes.io/part-of: klusoga-backup-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: klusoga-backup-operator
+  name: destination-sample
+spec:
+  # TODO(user): Add fields here

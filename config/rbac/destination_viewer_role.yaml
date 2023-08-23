@@ -1,0 +1,27 @@
+# permissions for end users to view destinations.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: destination-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: klusoga-backup-operator
+    app.kubernetes.io/part-of: klusoga-backup-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: destination-viewer-role
+rules:
+- apiGroups:
+  - backup.klusoga.de
+  resources:
+  - destinations
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - backup.klusoga.de
+  resources:
+  - destinations/status
+  verbs:
+  - get
