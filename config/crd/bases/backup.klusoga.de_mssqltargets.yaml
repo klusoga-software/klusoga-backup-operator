@@ -16,8 +16,8 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.appLabel
-      name: AppLabel
+    - jsonPath: .spec.deploymentName
+      name: Deployment
       type: string
     - jsonPath: .spec.credentialsRef
       name: Credentials
@@ -27,6 +27,9 @@ spec:
       type: string
     - jsonPath: .spec.databases
       name: Databases
+      type: string
+    - jsonPath: .spec.image
+      name: Image
       type: string
     name: v1alpha1
     schema:
@@ -48,18 +51,22 @@ spec:
           spec:
             description: MssqlTargetSpec defines the desired state of MssqlTarget
             properties:
-              appLabel:
-                description: Foo is an example field of MssqlTarget. Edit mssqltarget_types.go
-                  to remove/update
-                type: string
               credentialsRef:
                 type: string
               databases:
                 items:
                   type: string
                 type: array
+              deploymentName:
+                description: Foo is an example field of MssqlTarget. Edit mssqltarget_types.go
+                  to remove/update
+                type: string
               destinationRef:
                 type: string
+              image:
+                type: string
+            required:
+            - image
             type: object
           status:
             description: MssqlTargetStatus defines the observed state of MssqlTarget

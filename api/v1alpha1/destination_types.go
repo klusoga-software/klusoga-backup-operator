@@ -29,7 +29,20 @@ type DestinationSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Destination. Edit destination_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Type               DestinationType    `json:"type,omitempty"`
+	AwsDestinationSpec AwsDestinationSpec `json:"awsSpec,omitempty"`
+}
+
+type DestinationType string
+
+const (
+	Aws DestinationType = "aws"
+)
+
+type AwsDestinationSpec struct {
+	Bucket    string `json:"bucket,omitempty"`
+	Region    string `json:"region,omitempty"`
+	SecretRef string `json:"secretRef"`
 }
 
 // DestinationStatus defines the observed state of Destination
@@ -40,6 +53,7 @@ type DestinationStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
 
 // Destination is the Schema for the destinations API
 type Destination struct {

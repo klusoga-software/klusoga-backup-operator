@@ -7,6 +7,10 @@ metadata:
     app.kubernetes.io/part-of: klusoga-backup-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: klusoga-backup-operator
-  name: destination-sample
+  name: s3
 spec:
-  # TODO(user): Add fields here
+  type: aws
+  awsSpec:
+    bucket: klusoga-backup
+    region: eu-central-1
+    secretRef: backup-bucket

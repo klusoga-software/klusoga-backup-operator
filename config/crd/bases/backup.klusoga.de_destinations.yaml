@@ -15,7 +15,11 @@ spec:
     singular: destination
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.type
+      name: Type
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Destination is the Schema for the destinations API
@@ -35,7 +39,18 @@ spec:
           spec:
             description: DestinationSpec defines the desired state of Destination
             properties:
-              foo:
+              awsSpec:
+                properties:
+                  bucket:
+                    type: string
+                  region:
+                    type: string
+                  secretRef:
+                    type: string
+                required:
+                - secretRef
+                type: object
+              type:
                 description: Foo is an example field of Destination. Edit destination_types.go
                   to remove/update
                 type: string
