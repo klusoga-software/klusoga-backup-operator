@@ -19,10 +19,13 @@ package controllers
 import (
 	"context"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -68,43 +71,27 @@ func (r *MssqlTargetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	logger.Info("Reconciling Mssql Target", "Name", mssqlTarget.Name)
 
-	depl, err := r.getDeployment(ctx, req, mssqlTarget)
-
-	containers := depl.Spec.Template.Spec.Containers
-	found := false
-	for _, c := range containers {
-		if c.Name == "klusoga-backup" {
-			found = true
-		}
-	}
-
-	if !found {
-		if err := r.createBackupContainer(ctx, depl, mssqlTarget); err != nil {
+	foundCronjob := &batchv1.CronJob{}
+	err = r.Get(ctx, types.NamespacedName{Name: mssqlTarget.Name, Namespace: mssqlTarget.Namespace}, foundCronjob)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("Mssql Target Cronjob not found. Creating...")
+			cron, err := r.createCronJob(ctx, mssqlTarget)
+			err = r.Create(ctx, cron)
+			if err != nil {
+				logger.Error(err, "Error while create cronjob")
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{}, nil
+		} else {
 			return ctrl.Result{}, err
 		}
 	}
 
-	isMemcachedMarkedToBeDeleted := mssqlTarget.GetDeletionTimestamp() != nil
-	if isMemcachedMarkedToBeDeleted {
-		if controllerutil.ContainsFinalizer(mssqlTarget, loadbalancerFinalizer) {
-			if err := r.cleanupDeployment(ctx, mssqlTarget); err != nil {
-				return ctrl.Result{}, err
-			}
-
-			controllerutil.RemoveFinalizer(mssqlTarget, loadbalancerFinalizer)
-			err := r.Update(ctx, mssqlTarget)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-		}
-		return ctrl.Result{}, nil
-	}
-
-	// Add finalizer for this CR
-	if !controllerutil.ContainsFinalizer(mssqlTarget, loadbalancerFinalizer) {
-		controllerutil.AddFinalizer(mssqlTarget, loadbalancerFinalizer)
-		err = r.Update(ctx, mssqlTarget)
-		if err != nil {
+	cron, err := r.createCronJob(ctx, mssqlTarget)
+	if !reflect.DeepEqual(cron.Spec, foundCronjob.Spec) {
+		if err = r.Update(ctx, cron); err != nil {
+			logger.Error(err, "Failed to update Cronjob", "Name", cron.Name)
 			return ctrl.Result{}, err
 		}
 	}
@@ -118,13 +105,14 @@ func (r *MssqlTargetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&backupv1alpha1.MssqlTarget{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&v1.Secret{}).
+		Owns(&batchv1.CronJob{}).
 		Complete(r)
 }
 
 func (r *MssqlTargetReconciler) getDeployment(ctx context.Context, req ctrl.Request, mssqlTarget *backupv1alpha1.MssqlTarget) (*appsv1.Deployment, error) {
 	deployment := &appsv1.Deployment{}
 
-	err := r.Client.Get(ctx, types.NamespacedName{Name: mssqlTarget.Spec.DeploymentName, Namespace: mssqlTarget.Namespace}, deployment)
+	err := r.Client.Get(ctx, types.NamespacedName{Name: mssqlTarget.Spec.PersistentVolumeClaimName, Namespace: mssqlTarget.Namespace}, deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -132,24 +120,42 @@ func (r *MssqlTargetReconciler) getDeployment(ctx context.Context, req ctrl.Requ
 	return deployment, nil
 }
 
-func (r *MssqlTargetReconciler) createBackupContainer(ctx context.Context, deployment *appsv1.Deployment, mssqlTarget *backupv1alpha1.MssqlTarget) error {
+func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *backupv1alpha1.MssqlTarget) (*batchv1.CronJob, error) {
+
 	container := v1.Container{
 		Name:    "klusoga-backup",
 		Image:   mssqlTarget.Spec.Image,
 		Command: []string{"/klusoga-backup-agent"},
-		Args:    []string{"backup", "--host", "127.0.0.1", "-p", "gS75e4nt2vr263Vc6fgw", "-u", "sa", "-t", "mssql", "--port", "1433", "--path", "/", "--databases", "master", "--schedule", "*/20 * * * * *"},
+		Args:    []string{"backup", "--host", mssqlTarget.Spec.Host, "-p", "ap2zIxdWxpLNOQENGhpG", "-u", "sa", "-t", "mssql", "--port", mssqlTarget.Spec.Port, "--path", mssqlTarget.Spec.Path, "--databases", mssqlTarget.Spec.Databases},
 	}
 
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, container)
+	var ttl int32 = 2
 
-	err := r.Client.Update(ctx, deployment)
+	cronjob := batchv1.CronJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      mssqlTarget.Name,
+			Namespace: mssqlTarget.Namespace,
+		},
+		Spec: batchv1.CronJobSpec{
+			Schedule: mssqlTarget.Spec.Schedule,
+			JobTemplate: batchv1.JobTemplateSpec{
+				Spec: batchv1.JobSpec{
+					TTLSecondsAfterFinished: &ttl,
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{
+							Containers:    []v1.Container{container},
+							RestartPolicy: v1.RestartPolicyOnFailure,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err := controllerutil.SetControllerReference(mssqlTarget, &cronjob, r.Scheme)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
-}
-
-func (r *MssqlTargetReconciler) cleanupDeployment(ctx context.Context, mssqlTarget *backupv1alpha1.MssqlTarget) error {
-	return nil
+	return &cronjob, nil
 }
