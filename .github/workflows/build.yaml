@@ -77,4 +77,4 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          make docker-build docker-push IMG=klusoga/klusoga-backup-operator:${{ needs.tag.outputs.semver }}
+          make docker-build docker-push IMG=klusoga/backup-operator:${{ needs.tag.outputs.semver }}
