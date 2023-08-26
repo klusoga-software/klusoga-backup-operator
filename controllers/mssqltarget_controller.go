@@ -176,6 +176,9 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 	}
 
 	var ttl int32 = 2
+	var backoffLimit int32 = 5
+	var parallel int32 = 1
+	var failedJobCount int32 = 1
 
 	cronjob := batchv1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{
@@ -183,10 +186,13 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 			Namespace: mssqlTarget.Namespace,
 		},
 		Spec: batchv1.CronJobSpec{
-			Schedule: mssqlTarget.Spec.Schedule,
+			Schedule:               mssqlTarget.Spec.Schedule,
+			FailedJobsHistoryLimit: &failedJobCount,
 			JobTemplate: batchv1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
 					TTLSecondsAfterFinished: &ttl,
+					BackoffLimit:            &backoffLimit,
+					Parallelism:             &parallel,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							Containers:    []v1.Container{container},
