@@ -171,11 +171,17 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 		Image:   mssqlTarget.Spec.Image,
 		Env:     r.buildBackupEnvVariables(destination),
 		Command: []string{"/klusoga-backup-agent"},
-		VolumeMounts: []v1.VolumeMount{v1.VolumeMount{
-			Name:      "destinations",
-			MountPath: "/destinations.yaml",
-			SubPath:   "destinations.yaml",
-		}},
+		VolumeMounts: []v1.VolumeMount{
+			v1.VolumeMount{
+				Name:      "destinations",
+				MountPath: "/destinations.yaml",
+				SubPath:   "destinations.yaml",
+			},
+			v1.VolumeMount{
+				Name:      "backup",
+				MountPath: mssqlTarget.Spec.Path,
+			},
+		},
 		Args: []string{"backup", "--host", mssqlTarget.Spec.Host, "-p", sqlCredentials.Password, "-u", sqlCredentials.Username, "-t", "mssql", "--port", mssqlTarget.Spec.Port, "--path", mssqlTarget.Spec.Path, "--databases", mssqlTarget.Spec.Databases, "--destination", "s3"},
 	}
 
@@ -195,20 +201,30 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 						Spec: v1.PodSpec{
 							Containers:    []v1.Container{container},
 							RestartPolicy: v1.RestartPolicyOnFailure,
-							Volumes: []v1.Volume{v1.Volume{
-								Name: "destinations",
-								VolumeSource: v1.VolumeSource{
-									ConfigMap: &v1.ConfigMapVolumeSource{
-										Items: []v1.KeyToPath{v1.KeyToPath{
-											Key:  "destinations.yaml",
-											Path: "destinations.yaml",
-										}},
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: destination.Name,
+							Volumes: []v1.Volume{
+								v1.Volume{
+									Name: "destinations",
+									VolumeSource: v1.VolumeSource{
+										ConfigMap: &v1.ConfigMapVolumeSource{
+											Items: []v1.KeyToPath{v1.KeyToPath{
+												Key:  "destinations.yaml",
+												Path: "destinations.yaml",
+											}},
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: destination.Name,
+											},
 										},
 									},
 								},
-							}},
+								v1.Volume{
+									Name: "backup",
+									VolumeSource: v1.VolumeSource{
+										PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+											ClaimName: mssqlTarget.Spec.PersistentVolumeClaimName,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
