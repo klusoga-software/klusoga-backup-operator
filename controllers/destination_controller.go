@@ -18,7 +18,15 @@ package controllers
 
 import (
 	"context"
+	"github.com/klusoga-software/klusoga-backup-operator/api/types"
+	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,9 +55,47 @@ type DestinationReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *DestinationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	destination := &backupv1alpha1.Destination{}
+	err := r.Get(ctx, req.NamespacedName, destination)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("Destination not found", "Name", req.NamespacedName)
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Failed to get Mssql Target", "Name", req.NamespacedName)
+		return ctrl.Result{}, err
+	}
+
+	foundConfig := &corev1.ConfigMap{}
+	if err := r.Get(ctx, k8sTypes.NamespacedName{Name: destination.Name, Namespace: destination.Namespace}, foundConfig); err != nil {
+		if errors.IsNotFound(err) {
+			config, err := r.createDestinationConfigmap(destination)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+
+			err = r.Create(ctx, config)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			return ctrl.Result{}, err
+		}
+	}
+
+	config, err := r.createDestinationConfigmap(destination)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if !reflect.DeepEqual(config.Data, foundConfig.Data) {
+		if err = r.Update(ctx, config); err != nil {
+			logger.Error(err, "Failed to update Configmap", "Name", config.Name)
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -58,5 +104,40 @@ func (r *DestinationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *DestinationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&backupv1alpha1.Destination{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
+}
+
+func (r *DestinationReconciler) createDestinationConfigmap(destination *backupv1alpha1.Destination) (*corev1.ConfigMap, error) {
+	dest := types.Destination{
+		Name: destination.Name,
+		Type: destination.Spec.Type,
+	}
+
+	switch destination.Spec.Type {
+	case types.Aws:
+		dest.Bucket = destination.Spec.AwsDestinationSpec.Bucket
+		dest.Region = destination.Spec.AwsDestinationSpec.Region
+	}
+
+	destinationFile := types.DestinationFile{Destinations: []types.Destination{dest}}
+	data, err := yaml.Marshal(destinationFile)
+	if err != nil {
+		return nil, err
+	}
+
+	config := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      destination.Name,
+			Namespace: destination.Namespace,
+		},
+		Data: map[string]string{"destinations.yaml": string(data)},
+	}
+
+	err = controllerutil.SetControllerReference(destination, config, r.Scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }

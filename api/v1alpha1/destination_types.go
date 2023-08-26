@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/klusoga-software/klusoga-backup-operator/api/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,15 +30,9 @@ type DestinationSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Destination. Edit destination_types.go to remove/update
-	Type               DestinationType    `json:"type,omitempty"`
-	AwsDestinationSpec AwsDestinationSpec `json:"awsSpec,omitempty"`
+	Type               types.DestinationType `json:"type,omitempty"`
+	AwsDestinationSpec AwsDestinationSpec    `json:"awsSpec,omitempty"`
 }
-
-type DestinationType string
-
-const (
-	Aws DestinationType = "aws"
-)
 
 type AwsDestinationSpec struct {
 	Bucket    string `json:"bucket,omitempty"`
