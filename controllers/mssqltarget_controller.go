@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	types2 "github.com/klusoga-software/klusoga-backup-operator/api/types"
-	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -49,6 +48,9 @@ type MssqlTargetReconciler struct {
 //+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=backup.klusoga.de,resources=destinations,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -116,22 +118,10 @@ func (r *MssqlTargetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *MssqlTargetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&backupv1alpha1.MssqlTarget{}).
-		Owns(&appsv1.Deployment{}).
 		Owns(&v1.Secret{}).
 		Owns(&batchv1.CronJob{}).
 		Owns(&backupv1alpha1.Destination{}).
 		Complete(r)
-}
-
-func (r *MssqlTargetReconciler) getDeployment(ctx context.Context, req ctrl.Request, mssqlTarget *backupv1alpha1.MssqlTarget) (*appsv1.Deployment, error) {
-	deployment := &appsv1.Deployment{}
-
-	err := r.Client.Get(ctx, types.NamespacedName{Name: mssqlTarget.Spec.PersistentVolumeClaimName, Namespace: mssqlTarget.Namespace}, deployment)
-	if err != nil {
-		return nil, err
-	}
-
-	return deployment, nil
 }
 
 func (r *MssqlTargetReconciler) getSqlSecret(ctx context.Context, mssqlTarget *backupv1alpha1.MssqlTarget) (*SqlCredentials, error) {
