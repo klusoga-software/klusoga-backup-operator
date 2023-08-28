@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - klusoga.de
+  - backup.klusoga.de
   resources:
   - destinations
   verbs:
@@ -17,13 +17,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - klusoga.de
+  - backup.klusoga.de
   resources:
   - destinations/finalizers
   verbs:
   - update
 - apiGroups:
-  - klusoga.de
+  - backup.klusoga.de
   resources:
   - destinations/status
   verbs:
@@ -31,7 +31,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - klusoga.de
+  - backup.klusoga.de
   resources:
   - mssqltargets
   verbs:
@@ -43,16 +43,52 @@ rules:
   - update
   - watch
 - apiGroups:
-  - klusoga.de
+  - backup.klusoga.de
   resources:
   - mssqltargets/finalizers
   verbs:
   - update
 - apiGroups:
-  - klusoga.de
+  - backup.klusoga.de
   resources:
   - mssqltargets/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

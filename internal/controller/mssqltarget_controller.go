@@ -46,9 +46,12 @@ type MssqlTargetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=klusoga.de,resources=mssqltargets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=klusoga.de,resources=mssqltargets/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=klusoga.de,resources=mssqltargets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=backup.klusoga.de,resources=destinations,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
