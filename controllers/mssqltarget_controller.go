@@ -172,7 +172,7 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 				MountPath: mssqlTarget.Spec.Path,
 			},
 		},
-		Args: []string{"backup", "--host", mssqlTarget.Spec.Host, "-p", sqlCredentials.Password, "-u", sqlCredentials.Username, "-t", "mssql", "--port", mssqlTarget.Spec.Port, "--path", mssqlTarget.Spec.Path, "--databases", mssqlTarget.Spec.Databases, "--destination", "s3"},
+		Args: []string{"backup", "--host", mssqlTarget.Spec.Host, "-p", sqlCredentials.Password, "-u", sqlCredentials.Username, "-t", "mssql", "--port", mssqlTarget.Spec.Port, "--path", mssqlTarget.Spec.Path, "--databases", mssqlTarget.Spec.Databases, "--destination", mssqlTarget.Spec.DestinationRef},
 	}
 
 	var ttl int32 = 2
