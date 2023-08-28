@@ -85,10 +85,16 @@ func (r *MssqlTargetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			logger.Info("Mssql Target Cronjob not found. Creating...")
 			secret, err := r.getSqlSecret(ctx, mssqlTarget)
 			if err != nil {
+				logger.Error(err, "Error while get sql secret")
 				return ctrl.Result{}, err
 			}
 
 			cron, err := r.createCronJob(ctx, mssqlTarget, *secret)
+			if err != nil {
+				logger.Error(err, "Error while create cronjob")
+				return ctrl.Result{}, err
+			}
+
 			err = r.Create(ctx, cron)
 			if err != nil {
 				logger.Error(err, "Error while create cronjob")
@@ -102,9 +108,14 @@ func (r *MssqlTargetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	secret, err := r.getSqlSecret(ctx, mssqlTarget)
 	if err != nil {
+		logger.Error(err, "Error while get sql secret")
 		return ctrl.Result{}, err
 	}
 	cron, err := r.createCronJob(ctx, mssqlTarget, *secret)
+	if err != nil {
+		logger.Error(err, "Error while create cronjob")
+		return ctrl.Result{}, err
+	}
 	if !reflect.DeepEqual(cron.Spec, foundCronjob.Spec) {
 		if err = r.Update(ctx, cron); err != nil {
 			logger.Error(err, "Failed to update Cronjob", "Name", cron.Name)
@@ -160,12 +171,12 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 		Env:     r.buildBackupEnvVariables(destination),
 		Command: []string{"/klusoga-backup-agent"},
 		VolumeMounts: []v1.VolumeMount{
-			v1.VolumeMount{
+			{
 				Name:      "destinations",
 				MountPath: "/destinations.yaml",
 				SubPath:   "destinations.yaml",
 			},
-			v1.VolumeMount{
+			{
 				Name:      "backup",
 				MountPath: mssqlTarget.Spec.Path,
 			},
@@ -196,11 +207,11 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 							Containers:    []v1.Container{container},
 							RestartPolicy: v1.RestartPolicyOnFailure,
 							Volumes: []v1.Volume{
-								v1.Volume{
+								{
 									Name: "destinations",
 									VolumeSource: v1.VolumeSource{
 										ConfigMap: &v1.ConfigMapVolumeSource{
-											Items: []v1.KeyToPath{v1.KeyToPath{
+											Items: []v1.KeyToPath{{
 												Key:  "destinations.yaml",
 												Path: "destinations.yaml",
 											}},
@@ -210,7 +221,7 @@ func (r *MssqlTargetReconciler) createCronJob(ctx context.Context, mssqlTarget *
 										},
 									},
 								},
-								v1.Volume{
+								{
 									Name: "backup",
 									VolumeSource: v1.VolumeSource{
 										PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{

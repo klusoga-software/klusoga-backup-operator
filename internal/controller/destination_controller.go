@@ -74,11 +74,13 @@ func (r *DestinationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if errors.IsNotFound(err) {
 			config, err := r.createDestinationConfigmap(destination)
 			if err != nil {
+				logger.Error(err, "Failed to create Configmap", "Name", config.Name)
 				return ctrl.Result{}, err
 			}
 
 			err = r.Create(ctx, config)
 			if err != nil {
+				logger.Error(err, "Failed to create Configmap", "Name", config.Name)
 				return ctrl.Result{}, err
 			}
 		} else {
@@ -88,6 +90,7 @@ func (r *DestinationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	config, err := r.createDestinationConfigmap(destination)
 	if err != nil {
+		logger.Error(err, "Failed to create Configmap", "Name", config.Name)
 		return ctrl.Result{}, err
 	}
 
