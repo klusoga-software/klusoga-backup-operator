@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	backupv1alpha1 "github.com/klusoga-software/klusoga-backup-operator/api/v1alpha1"
-	"github.com/klusoga-software/klusoga-backup-operator/controllers"
+	"github.com/klusoga-software/klusoga-backup-operator/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -89,18 +89,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.DestinationReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Destination")
-		os.Exit(1)
-	}
-	if err = (&controllers.MssqlTargetReconciler{
+	if err = (&controller.MssqlTargetReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MssqlTarget")
+		os.Exit(1)
+	}
+	if err = (&controller.DestinationReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Destination")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

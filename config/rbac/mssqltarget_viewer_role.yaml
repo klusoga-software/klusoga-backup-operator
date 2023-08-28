@@ -12,7 +12,7 @@ metadata:
   name: mssqltarget-viewer-role
 rules:
 - apiGroups:
-  - backup.klusoga.de
+  - klusoga.de
   resources:
   - mssqltargets
   verbs:
@@ -20,7 +20,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - backup.klusoga.de
+  - klusoga.de
   resources:
   - mssqltargets/status
   verbs:

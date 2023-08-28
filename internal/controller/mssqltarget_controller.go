@@ -14,24 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package controller
 
 import (
 	"context"
-	types2 "github.com/klusoga-software/klusoga-backup-operator/api/types"
-	batchv1 "k8s.io/api/batch/v1"
+	"reflect"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	types2 "github.com/klusoga-software/klusoga-backup-operator/api/types"
 	backupv1alpha1 "github.com/klusoga-software/klusoga-backup-operator/api/v1alpha1"
+	batchv1 "k8s.io/api/batch/v1"
 )
 
 type SqlCredentials struct {
@@ -45,12 +46,9 @@ type MssqlTargetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=backup.klusoga.de,resources=mssqltargets/finalizers,verbs=update
-//+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=backup.klusoga.de,resources=destinations,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=klusoga.de,resources=mssqltargets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=klusoga.de,resources=mssqltargets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=klusoga.de,resources=mssqltargets/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -60,7 +58,7 @@ type MssqlTargetReconciler struct {
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.15.0/pkg/reconcile
 func (r *MssqlTargetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -118,9 +116,6 @@ func (r *MssqlTargetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *MssqlTargetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&backupv1alpha1.MssqlTarget{}).
-		Owns(&v1.Secret{}).
-		Owns(&batchv1.CronJob{}).
-		Owns(&backupv1alpha1.Destination{}).
 		Complete(r)
 }
 

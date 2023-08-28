@@ -1,70 +1,94 @@
-# Klusoga Backup Operator
+# klusoga-backup-operator
+// TODO(user): Add simple overview of use/purpose
 
-## Description:
-This Operator manages backup targets and destinations for the klusoga backup cli tool
+## Description
+// TODO(user): An in-depth paragraph about your project and overview of use
 
-## MssqlTargets:
-```yaml
-apiVersion: backup.klusoga.de/v1alpha1
-kind: MssqlTarget
-metadata:
-  name: mssqltarget-sample
-spec:
-  credentialsRef: mssql-creds
-  destinationRef: s3
-  image: "klusoga/backup:v0.1.4"
-  port: "1433"
-  host: "172.20.134.0"
-  path: /mssql-backup/backup
-  schedule: "*/5 * * * *"
-  databases: master
-  persistentVolumeClaimName: backup-claim
+## Getting Started
+You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+
+### Running on the cluster
+1. Install Instances of Custom Resources:
+
+```sh
+kubectl apply -f config/samples/
 ```
 
-A MssqlTarget resource manages backups of Microsoft SQL backups.
+2. Build and push your image to the location specified by `IMG`:
 
-| Parameter                 | Description                                                                      |
-|---------------------------|----------------------------------------------------------------------------------|
-| credentialsRef            | A secret that contains username and password of the sql server for backups       |
-| destinationRef            | The name of the destination resource you want to send your backups to            |
-| image                     | The docker image of the klusoga backup cli tool you want to use                  |
-| port                      | The port of the mssql server                                                     |
-| host                      | The service IP adress of the mssql server                                        |
-| path                      | The path to store mssql backups. This needs to be mounted to a ReadWriteMany PVC |
-| schedule                  | The cronjob schedule you want to backup the databases                            |
-| databases                 | A comma separated list of databases you want to backup                           |
-| persistentVolumeClaimName | The name of the pvc the backup volume is mounted to                              |
-
-## Destinations:
-Destinations are storages for backups.
-
-### Example:
-```yaml
-apiVersion: backup.klusoga.de/v1alpha1
-kind: Destination
-metadata:
-  name: s3
-spec:
-  type: aws
-  awsSpec:
-    bucket: klusoga-backup
-    region: eu-central-1
-    secretRef: backup-bucket
+```sh
+make docker-build docker-push IMG=<some-registry>/klusoga-backup-operator:tag
 ```
 
-### AWS Destination:
-This type of destination specifies a aws s3 bucket
+3. Deploy the controller to the cluster with the image specified by `IMG`:
 
-You need to create a secret for the aws credentials:
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: backup-bucket
-  namespace: default
-data:
-  AWS_ACCESS_KEY_ID: nsjkfnknfjne=
-  AWS_SECRET_ACCESS_KEY: kndsfjknrjhnvjcjkahjn==
-type: Opaque
+```sh
+make deploy IMG=<some-registry>/klusoga-backup-operator:tag
 ```
+
+### Uninstall CRDs
+To delete the CRDs from the cluster:
+
+```sh
+make uninstall
+```
+
+### Undeploy controller
+UnDeploy the controller from the cluster:
+
+```sh
+make undeploy
+```
+
+## Contributing
+// TODO(user): Add detailed information on how you would like others to contribute to this project
+
+### How it works
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
+which provide a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
+
+### Test It Out
+1. Install the CRDs into the cluster:
+
+```sh
+make install
+```
+
+2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+
+```sh
+make run
+```
+
+**NOTE:** You can also run this in one step by running: `make install run`
+
+### Modifying the API definitions
+If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
+
+```sh
+make manifests
+```
+
+**NOTE:** Run `make --help` for more information on all potential `make` targets
+
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+
+## License
+
+Copyright 2023.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 

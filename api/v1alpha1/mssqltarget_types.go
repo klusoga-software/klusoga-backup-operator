@@ -27,8 +27,6 @@ import (
 type MssqlTargetSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of MssqlTarget. Edit mssqltarget_types.go to remove/update
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	Host                      string `json:"host"`
 	Port                      string `json:"port"`

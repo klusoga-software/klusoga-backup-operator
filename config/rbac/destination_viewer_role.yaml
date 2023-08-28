@@ -12,7 +12,7 @@ metadata:
   name: destination-viewer-role
 rules:
 - apiGroups:
-  - backup.klusoga.de
+  - klusoga.de
   resources:
   - destinations
   verbs:
@@ -20,7 +20,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - backup.klusoga.de
+  - klusoga.de
   resources:
   - destinations/status
   verbs:

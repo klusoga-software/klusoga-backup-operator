@@ -1,5 +1,5 @@
-## Append samples you want in your CSV to this file as resources ##
+## Append samples of your project ##
 resources:
-- backup_v1alpha1_destination.yaml
 - backup_v1alpha1_mssqltarget.yaml
+- backup_v1alpha1_destination.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

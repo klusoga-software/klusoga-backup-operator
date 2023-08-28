@@ -4,10 +4,7 @@
 # More info: https://book.kubebuilder.io/reference/project-config.html
 domain: klusoga.de
 layout:
-- go.kubebuilder.io/v3
-plugins:
-  manifests.sdk.operatorframework.io/v2: {}
-  scorecard.sdk.operatorframework.io/v2: {}
+- go.kubebuilder.io/v4
 projectName: klusoga-backup-operator
 repo: github.com/klusoga-software/klusoga-backup-operator
 resources:
@@ -17,7 +14,7 @@ resources:
   controller: true
   domain: klusoga.de
   group: backup
-  kind: Destination
+  kind: MssqlTarget
   path: github.com/klusoga-software/klusoga-backup-operator/api/v1alpha1
   version: v1alpha1
 - api:
@@ -26,7 +23,7 @@ resources:
   controller: true
   domain: klusoga.de
   group: backup
-  kind: MssqlTarget
+  kind: Destination
   path: github.com/klusoga-software/klusoga-backup-operator/api/v1alpha1
   version: v1alpha1
 version: "3"
